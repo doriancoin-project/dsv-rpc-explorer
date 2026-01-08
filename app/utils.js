@@ -3,9 +3,9 @@
 const fs = require("fs");
 
 const debug = require("debug");
-const debugLog = debug("btcexp:utils");
-const debugErrorLog = debug("btcexp:error");
-const debugErrorVerboseLog = debug("btcexp:errorVerbose");
+const debugLog = debug("dsvexp:utils");
+const debugErrorLog = debug("dsvexp:error");
+const debugErrorVerboseLog = debug("dsvexp:errorVerbose");
 
 const Decimal = require("decimal.js");
 const axios = require("axios");
@@ -1315,17 +1315,34 @@ const xpubPrefixes = new Map([
 	['Vpub', '02575483'],
 ]);
 
-const bip32TestnetNetwork = {
-	messagePrefix: '\x18Bitcoin Signed Message:\n',
-	bech32: 'tb',
+// Doriancoin mainnet network parameters
+const dsvMainnetNetwork = {
+	messagePrefix: '\x19Doriancoin Signed Message:\n',
+	bech32: 'dsv',
+	bip32: {
+		public: 0x0488b21e,
+		private: 0x0488ade4,
+	},
+	pubKeyHash: 0x1e,  // 30 - 'D' addresses
+	scriptHash: 0x05,  // 5
+	wif: 0xb0,         // 176
+};
+
+// Doriancoin testnet network parameters
+const dsvTestnetNetwork = {
+	messagePrefix: '\x19Doriancoin Signed Message:\n',
+	bech32: 'tdsv',
 	bip32: {
 		public: 0x043587cf,
 		private: 0x04358394,
 	},
-	pubKeyHash: 0x6f,
-	scriptHash: 0xc4,
-	wif: 0xEF,
+	pubKeyHash: 0x1e,  // 30
+	scriptHash: 0x16,  // 22
+	wif: 0xef,         // 239
 };
+
+// Alias for backward compatibility
+const bip32TestnetNetwork = dsvTestnetNetwork;
 
 // ref: https://github.com/ExodusMovement/xpub-converter/blob/master/src/index.js
 function xpubChangeVersionBytes(xpub, targetFormat) {
@@ -1345,9 +1362,10 @@ function xpubChangeVersionBytes(xpub, targetFormat) {
 
 // HD wallet addresses
 function bip32Addresses(extPubkey, addressType, account, limit=10, offset=0) {
-	let network = null;
+	// Use Doriancoin network parameters
+	let network = dsvMainnetNetwork;
 	if (!extPubkey.match(/^(xpub|ypub|zpub|Ypub|Zpub).*$/)) {
-		network = bip32TestnetNetwork;
+		network = dsvTestnetNetwork;
 	}
 
 	let bip32object = bip32.fromBase58(extPubkey, network);
@@ -1513,7 +1531,10 @@ function tryParseAddress(address) {
 
 	let parsedAddress = null;
 
-	let b58prefix = (global.activeBlockchain == "main" ? /^[13].*$/ : /^[2mn].*$/);
+	// Doriancoin: mainnet addresses start with 'D' (P2PKH prefix 0x1e = 30)
+	// Doriancoin: testnet also uses 'D' for P2PKH (prefix 0x1e = 30)
+	// Also accept 'A' for P2SH on mainnet (prefix 0x05 = 5)
+	let b58prefix = (global.activeBlockchain == "main" ? /^[DA].*$/ : /^[D].*$/);
 	if (address.match(b58prefix)) {
 		try {
 			parsedAddress = bitcoinjs.address.fromBase58Check(address);
@@ -1592,7 +1613,7 @@ const awaitPromises = async (promises) => {
 };
 
 const obfuscateProperties = (obj, properties) => {
-	if (process.env.BTCEXP_SKIP_LOG_OBFUSCATION) {
+	if (process.env.DSVEXP_SKIP_LOG_OBFUSCATION) {
 		return obj;
 	}
 	

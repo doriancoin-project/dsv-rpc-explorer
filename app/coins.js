@@ -1,9 +1,9 @@
 "use strict";
 
-const btc = require("./coins/btc.js");
+const dsv = require("./coins/dsv.js");
 
 module.exports = {
-	"BTC": btc,
+	"DSV": dsv,
 
-	"coins":["BTC"]
+	"coins":["DSV"]
 };

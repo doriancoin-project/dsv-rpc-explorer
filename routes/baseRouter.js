@@ -1,7 +1,7 @@
 "use strict";
 
 const debug = require("debug");
-const debugLog = debug("btcexp:router");
+const debugLog = debug("dsvexp:router");
 
 const express = require('express');
 const csrfApi = require('csurf');
@@ -1805,7 +1805,7 @@ router.get("/next-halving", asyncHandler(async (req, res, next) => {
 
 router.get("/rpc-terminal", function(req, res, next) {
 	if (!config.demoSite && !req.authenticated) {
-		res.send("RPC Terminal / Browser require authentication. Set an authentication password via the 'BTCEXP_BASIC_AUTH_PASSWORD' environment variable (see .env-sample file for more info).");
+		res.send("RPC Terminal / Browser require authentication. Set an authentication password via the 'DSVEXP_BASIC_AUTH_PASSWORD' environment variable (see .env-sample file for more info).");
 		
 		next();
 
@@ -1819,7 +1819,7 @@ router.get("/rpc-terminal", function(req, res, next) {
 
 router.post("/rpc-terminal", asyncHandler(async (req, res, next) => {
 	if (!config.demoSite && !req.authenticated) {
-		res.send("RPC Terminal / Browser require authentication. Set an authentication password via the 'BTCEXP_BASIC_AUTH_PASSWORD' environment variable (see .env-sample file for more info).");
+		res.send("RPC Terminal / Browser require authentication. Set an authentication password via the 'DSVEXP_BASIC_AUTH_PASSWORD' environment variable (see .env-sample file for more info).");
 
 		next();
 
@@ -1879,7 +1879,7 @@ router.post("/rpc-terminal", asyncHandler(async (req, res, next) => {
 
 router.get("/rpc-browser", asyncHandler(async (req, res, next) => {
 	if (!config.demoSite && !req.authenticated) {
-		res.send("RPC Terminal / Browser require authentication. Set an authentication password via the 'BTCEXP_BASIC_AUTH_PASSWORD' environment variable (see .env-sample file for more info).");
+		res.send("RPC Terminal / Browser require authentication. Set an authentication password via the 'DSVEXP_BASIC_AUTH_PASSWORD' environment variable (see .env-sample file for more info).");
 
 		next();
 

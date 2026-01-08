@@ -1,7 +1,7 @@
 {
-	"name": "btc-rpc-explorer",
-	"version": "3.5.1",
-	"description": "Open-source, self-hosted Bitcoin explorer",
+	"name": "dsv-rpc-explorer",
+	"version": "1.0.0",
+	"description": "Open-source, self-hosted Doriancoin explorer",
 	"private": false,
 	"bin": "bin/cli.js",
 	"scripts": {
@@ -20,11 +20,11 @@
 		"css": "npm run css-light && npm run css-dark && npm run css-dark-v1 && npm run integrity"
 	},
 	"keywords": [
-		"bitcoin",
-		"btc",
+		"doriancoin",
+		"dsv",
 		"blockchain"
 	],
-	"author": "Dan Janosik <dan@47.io>",
+	"author": "Based on BTC RPC Explorer by Dan Janosik",
 	"license": "MIT",
 	"repository": {
 		"type": "git",

@@ -1,7 +1,7 @@
 "use strict";
 
 const debug = require('debug');
-const debugLog = debug("btcexp:rpc");
+const debugLog = debug("dsvexp:rpc");
 
 const async = require("async");
 const semver = require("semver");
@@ -314,7 +314,7 @@ function getRawTransaction(txid, blockhash) {
 
 async function noTxIndexTransactionLookup(txid, walletOnly) {
 	// Try looking up with an external Electrum server, using 'get_confirmed_blockhash'.
-	// This is only available in Electrs and requires enabling BTCEXP_ELECTRUM_TXINDEX.
+	// This is only available in Electrs and requires enabling DSVEXP_ELECTRUM_TXINDEX.
 	if (!walletOnly && (config.addressApi == "electrum" || config.addressApi == "electrumx") && config.electrumTxIndex) {
 		try {
 			let blockhash = await electrumAddressApi.lookupTxBlockHash(txid);

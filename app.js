@@ -11,18 +11,18 @@ const debug = require("debug");
 
 
 // start with this, we will update after loading any .env files
-const debugDefaultCategories = "btcexp:app,btcexp:error,btcexp:errorVerbose";
+const debugDefaultCategories = "dsvexp:app,dsvexp:error,dsvexp:errorVerbose";
 debug.enable(debugDefaultCategories);
 
 
-const debugLog = debug("btcexp:app");
-const debugErrorLog = debug("btcexp:error");
-const debugPerfLog = debug("btcexp:actionPerformace");
-const debugAccessLog = debug("btcexp:access");
+const debugLog = debug("dsvexp:app");
+const debugErrorLog = debug("dsvexp:error");
+const debugPerfLog = debug("dsvexp:actionPerformace");
+const debugAccessLog = debug("dsvexp:access");
 
 const configPaths = [
-	path.join(os.homedir(), ".config", "btc-rpc-explorer.env"),
-	path.join("/etc", "btc-rpc-explorer", ".env"),
+	path.join(os.homedir(), ".config", "dsv-rpc-explorer.env"),
+	path.join("/etc", "dsv-rpc-explorer", ".env"),
 	path.join(process.cwd(), ".env"),
 ];
 
@@ -90,8 +90,9 @@ const qrcode = require("qrcode");
 const addressApi = require("./app/api/addressApi.js");
 const electrumAddressApi = require("./app/api/electrumAddressApi.js");
 const appStats = require("./app/appStats.js");
-const btcQuotes = require("./app/coins/btcQuotes.js");
-const btcHolidays = require("./app/coins/btcHolidays.js");
+// Doriancoin-specific quotes and holidays (placeholders)
+const dsvQuotes = require("./app/coins/dsvQuotes.js");
+const dsvHolidays = require("./app/coins/dsvHolidays.js");
 const auth = require('./app/auth.js');
 const sso = require('./app/sso.js');
 const markdown = require("markdown-it")();
@@ -116,7 +117,7 @@ global.appVersion = package_json.version;
 global.cacheId = global.appVersion;
 debugLog(`Default cacheId '${global.cacheId}'`);
 
-global.btcNodeSemver = "0.0.0";
+global.dsvNodeSemver = "0.0.0";
 
 
 const cleanupRouter = require('./routes/cleanupRouter.js');
@@ -194,13 +195,13 @@ expressApp.use(cookieParser());
 expressApp.disable('x-powered-by');
 
 
-if (process.env.BTCEXP_BASIC_AUTH_PASSWORD) {
+if (process.env.DSVEXP_BASIC_AUTH_PASSWORD) {
 	// basic http authentication
-	expressApp.use(auth(process.env.BTCEXP_BASIC_AUTH_PASSWORD));
+	expressApp.use(auth(process.env.DSVEXP_BASIC_AUTH_PASSWORD));
 
-} else if (process.env.BTCEXP_SSO_TOKEN_FILE) {
+} else if (process.env.DSVEXP_SSO_TOKEN_FILE) {
 	// sso authentication
-	expressApp.use(sso(process.env.BTCEXP_SSO_TOKEN_FILE, process.env.BTCEXP_SSO_LOGIN_REDIRECT_URL));
+	expressApp.use(sso(process.env.DSVEXP_SSO_TOKEN_FILE, process.env.DSVEXP_SSO_LOGIN_REDIRECT_URL));
 }
 
 // uncomment after placing your favicon in /public
@@ -453,25 +454,25 @@ function loadHistoricalDataForChain(chain) {
 function loadHolidays(chain) {
 	debugLog(`Loading holiday data`);
 
-	global.btcHolidays = btcHolidays;
-	global.btcHolidays.byDay = {};
-	global.btcHolidays.sortedDays = [];
-	global.btcHolidays.sortedItems = [...btcHolidays.items];
-	global.btcHolidays.sortedItems.sort((a, b) => a.date.localeCompare(b.date));
+	global.dsvHolidays = dsvHolidays;
+	global.dsvHolidays.byDay = {};
+	global.dsvHolidays.sortedDays = [];
+	global.dsvHolidays.sortedItems = [...dsvHolidays.items];
+	global.dsvHolidays.sortedItems.sort((a, b) => a.date.localeCompare(b.date));
 
-	global.btcHolidays.items.forEach(function(item) {
+	global.dsvHolidays.items.forEach(function(item) {
 		let day = item.date.substring(5);
 
-		if (!global.btcHolidays.sortedDays.includes(day)) {
-			global.btcHolidays.sortedDays.push(day);
-			global.btcHolidays.sortedDays.sort();
+		if (!global.dsvHolidays.sortedDays.includes(day)) {
+			global.dsvHolidays.sortedDays.push(day);
+			global.dsvHolidays.sortedDays.sort();
 		}
 
-		if (global.btcHolidays.byDay[day] == undefined) {
-			global.btcHolidays.byDay[day] = [];
+		if (global.dsvHolidays.byDay[day] == undefined) {
+			global.dsvHolidays.byDay[day] = [];
 		}
 
-		global.btcHolidays.byDay[day].push(item);
+		global.dsvHolidays.byDay[day].push(item);
 	});
 }
 
@@ -1019,7 +1020,7 @@ expressApp.continueStartup = function() {
 	if (config.addressApi) {
 		let supportedAddressApis = addressApi.getSupportedAddressApis();
 		if (!supportedAddressApis.includes(config.addressApi)) {
-			utils.logError("32907ghsd0ge", `Unrecognized value for BTCEXP_ADDRESS_API: '${config.addressApi}'. Valid options are: ${supportedAddressApis}`);
+			utils.logError("32907ghsd0ge", `Unrecognized value for DSVEXP_ADDRESS_API: '${config.addressApi}'. Valid options are: ${supportedAddressApis}`);
 		}
 
 		if (config.addressApi == "electrum" || config.addressApi == "electrumx") {
@@ -1031,7 +1032,7 @@ expressApp.continueStartup = function() {
 					utils.logError("31207ugf4e0fed", err, {electrumServers:config.electrumServers});
 				});
 			} else {
-				utils.logError("327hs0gde", "You must set the 'BTCEXP_ELECTRUM_SERVERS' environment variable when BTCEXP_ADDRESS_API=electrum.");
+				utils.logError("327hs0gde", "You must set the 'DSVEXP_ELECTRUM_SERVERS' environment variable when DSVEXP_ADDRESS_API=electrum.");
 			}
 		}
 	}
