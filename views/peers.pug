@@ -149,7 +149,7 @@ block content
 
 								td #{item.connection_type}
 
-								if (peerIpSummary.ips)
+								if (peerIpSummary && peerIpSummary.ips)
 									td
 										- var ipAddr = item.addr.substring(0, item.addr.lastIndexOf(":"));
 										if (peerIpSummary.ips && peerIpSummary.ips.includes(ipAddr))
