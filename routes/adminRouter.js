@@ -1,7 +1,7 @@
 "use strict";
 
 const debug = require("debug");
-const debugLog = debug("btcexp:router");
+const debugLog = debug("dsvexp:router");
 
 const fs = require('fs');
 const v8 = require('v8');
@@ -15,6 +15,7 @@ const bitcoinjs = require('bitcoinjs-lib');
 const sha256 = require("crypto-js/sha256");
 const hexEnc = require("crypto-js/enc-hex");
 const Decimal = require("decimal.js");
+const basicAuth = require('basic-auth');
 
 
 const utils = require('./../app/utils.js');
@@ -26,6 +27,25 @@ const addressApi = require("./../app/api/addressApi.js");
 
 const statTracker = require("./../app/statTracker.js");
 const appStats = require("./../app/appStats.js");
+
+// Admin authentication middleware
+const adminPassword = process.env.DSVEXP_ADMIN_PASSWORD;
+
+router.use((req, res, next) => {
+	if (!adminPassword) {
+		// No password set, allow access (but show warning in logs on first request)
+		return next();
+	}
+
+	const credentials = basicAuth(req);
+
+	if (!credentials || credentials.pass !== adminPassword) {
+		res.set('WWW-Authenticate', 'Basic realm="Admin Dashboard"');
+		return res.status(401).send('Authentication required for admin dashboard.');
+	}
+
+	next();
+});
 
 
 
