@@ -228,9 +228,9 @@ module.exports = {
 		// Updated tool section indices after removing Bitcoin-specific items
 		prioritizedToolIdsList: [0, 10, 11, 9, 3, 4, 14, 12, 2, 5, 13, 1, 6, 7, 8],
 		toolSections: [
-			{name: "Basics", items: [0, 2]},
+			{name: "Basics", items: [0, 2, 17]},
 			{name: "Mempool", items: [4, 14, 5]},
-			{name: "Analysis", items: [9, 16, 10, 11, 12, 3, 18]},
+			{name: "Analysis", items: [9, 16, 10, 11, 12, 3]},
 			{name: "Technical", items: [13, 6, 7, 1]},
 			{name: "Fun", items: [8]},
 		]
