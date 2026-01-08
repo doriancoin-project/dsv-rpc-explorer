@@ -1,6 +1,6 @@
 {
-    "name": "",
-    "short_name": "",
+    "name": "Doriancoin Regtest Explorer",
+    "short_name": "DSV Regtest",
     "icons": [
         {
             "src": "/android-chrome-192x192.png",
