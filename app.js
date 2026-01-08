@@ -372,6 +372,11 @@ function loadMiningPoolConfigs() {
 		}
 
 		files.forEach(function(file) {
+			// Only process .json files
+			if (!file.endsWith('.json')) {
+				return;
+			}
+
 			var filepath = path.join(miningPoolsConfigDir, file);
 
 			var contents = fs.readFileSync(filepath, 'utf8');
