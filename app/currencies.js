@@ -1,8 +1,8 @@
 global.currencyTypes = {
-	"btc": {
-		id: "btc",
+	"dsv": {
+		id: "dsv",
 		type:"native",
-		name:"BTC",
+		name:"DSV",
 		multiplier:1,
 		default:true,
 		decimalPlaces:8
@@ -41,7 +41,7 @@ global.currencyTypes = {
 };
 
 global.currencySymbols = {
-	"btc": "₿",
+	"dsv": "Ð",
 	"usd": "$",
 	"eur": "€",
 	"gbp": "£"
