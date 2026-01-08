@@ -100,7 +100,8 @@ function getPeerInfo() {
 }
 
 function getBlockTemplate() {
-	return getRpcDataWithParams({method:"getblocktemplate", parameters:[{"rules": ["segwit"]}]});
+	// Doriancoin requires mweb rule in addition to segwit
+	return getRpcDataWithParams({method:"getblocktemplate", parameters:[{"rules": ["mweb", "segwit"]}]});
 }
 
 function getAllMempoolTxids() {
