@@ -908,14 +908,20 @@ router.get("/mempool/summary", function(req, res, next) {
 });
 
 router.get("/mempool/fees", asyncHandler(async (req, res, next) => {
-	let feeConfTargets = [1, 3, 6, 144];	
+	let feeConfTargets = [1, 3, 6, 144];
 	let rawSmartFeeEstimates = await coreApi.getSmartFeeEstimates("CONSERVATIVE", feeConfTargets);
 	let smartFeeEstimates = {};
-	
+
+	// Use relay fee as fallback when estimatesmartfee fails (common on low-activity chains)
+	let fallbackFeeRate = null;
+	if (global.getnetworkinfo && global.getnetworkinfo.relayfee) {
+		fallbackFeeRate = parseInt(new Decimal(global.getnetworkinfo.relayfee).times(coinConfig.baseCurrencyUnit.multiplier).dividedBy(1000));
+	}
+
 	for (let i = 0; i < feeConfTargets.length; i++) {
 		let rawSmartFeeEstimate = rawSmartFeeEstimates[i];
 		if (rawSmartFeeEstimate.errors) {
-			smartFeeEstimates[feeConfTargets[i]] = "?";
+			smartFeeEstimates[feeConfTargets[i]] = fallbackFeeRate !== null ? fallbackFeeRate : "?";
 		} else {
 			smartFeeEstimates[feeConfTargets[i]] = parseInt(new Decimal(rawSmartFeeEstimate.feerate).times(coinConfig.baseCurrencyUnit.multiplier).dividedBy(1000));
 		}

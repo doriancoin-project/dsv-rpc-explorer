@@ -85,11 +85,19 @@ router.get("/", asyncHandler(async (req, res, next) => {
 
 			let smartFeeEstimates = {};
 
+			// Use relay fee as fallback when estimatesmartfee fails (common on low-activity chains)
+			// relayfee from getnetworkinfo is in DSV/kB, convert to sat/vB (same as feerate)
+			let fallbackFeeRate = null;
+			if (global.getnetworkinfo && global.getnetworkinfo.relayfee) {
+				fallbackFeeRate = parseInt(new Decimal(global.getnetworkinfo.relayfee).times(coinConfig.baseCurrencyUnit.multiplier).dividedBy(1000));
+			}
+
 			for (let i = 0; i < feeConfTargets.length; i++) {
 				let rawSmartFeeEstimate = rawSmartFeeEstimates[i];
 
 				if (rawSmartFeeEstimate.errors) {
-					smartFeeEstimates[feeConfTargets[i]] = "?";
+					// Use relay fee as fallback, or "?" if not available
+					smartFeeEstimates[feeConfTargets[i]] = fallbackFeeRate !== null ? fallbackFeeRate : "?";
 
 				} else {
 					smartFeeEstimates[feeConfTargets[i]] = parseInt(new Decimal(rawSmartFeeEstimate.feerate).times(coinConfig.baseCurrencyUnit.multiplier).dividedBy(1000));
