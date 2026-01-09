@@ -2,5 +2,8 @@
 	<g fill="none" fill-rule="evenodd">
 		<circle cx="16" cy="16" r="16" fill="#39b703"/>
 		<text x="16" y="23" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="bold" fill="#FFF">D</text>
+		<!-- Vertical lines through the D -->
+		<rect x="13.5" y="4" width="2" height="24" fill="#FFF"/>
+		<rect x="16.5" y="4" width="2" height="24" fill="#FFF"/>
 	</g>
 </svg>
