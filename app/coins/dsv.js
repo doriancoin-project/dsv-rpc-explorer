@@ -82,6 +82,15 @@ module.exports = {
 	minTxBytes: 166,
 	minTxWeight: 166 * 4,
 	difficultyAdjustmentBlockCount: 2016,
+
+	// Doriancoin uses LWMA (Linear Weighted Moving Average) difficulty adjustment
+	useLWMA: true,
+	lwmaActivationHeightByNetwork: {
+		"main": 1243845,
+		"test": 100,
+		"regtest": 500
+	},
+	lwmaWindow: 45,  // 45-block averaging window
 	maxSupplyByNetwork: {
 		"main": new Decimal(84000000),
 		"test": new Decimal(84000000),

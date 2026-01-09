@@ -117,13 +117,27 @@ router.get("/", asyncHandler(async (req, res, next) => {
 		res.locals.getblockchaininfo = getblockchaininfo;
 
 		res.locals.difficultyPeriod = parseInt(Math.floor(getblockchaininfo.blocks / coinConfig.difficultyAdjustmentBlockCount));
-			
+
+		// Check if we're using LWMA difficulty adjustment
+		const lwmaActivationHeight = coinConfig.lwmaActivationHeightByNetwork ?
+			coinConfig.lwmaActivationHeightByNetwork[global.activeBlockchain] : null;
+		const useLWMA = coinConfig.useLWMA && lwmaActivationHeight && getblockchaininfo.blocks >= lwmaActivationHeight;
+		res.locals.useLWMA = useLWMA;
+
 
 		let blockHeights = [];
 		if (getblockchaininfo.blocks) {
-			// +1 to page size here so we have the next block to calculate T.T.M.
-			for (let i = 0; i < (config.site.homepage.recentBlocksCount + 1); i++) {
-				blockHeights.push(getblockchaininfo.blocks - i);
+			// For LWMA, we need at least lwmaWindow+1 blocks for calculation
+			// Otherwise, +1 to page size here so we have the next block to calculate T.T.M.
+			const lwmaWindow = coinConfig.lwmaWindow || 45;
+			const blocksNeeded = useLWMA ?
+				Math.max(config.site.homepage.recentBlocksCount + 1, lwmaWindow + 1) :
+				(config.site.homepage.recentBlocksCount + 1);
+
+			for (let i = 0; i < blocksNeeded; i++) {
+				if (getblockchaininfo.blocks - i >= 0) {
+					blockHeights.push(getblockchaininfo.blocks - i);
+				}
 			}
 		} else if (global.activeBlockchain == "regtest") {
 			// hack: default regtest node returns getblockchaininfo.blocks=0, despite
@@ -212,7 +226,18 @@ router.get("/", asyncHandler(async (req, res, next) => {
 		let eraStartBlockHeader = res.locals.difficultyPeriodFirstBlockHeader;
 		let currentBlock = res.locals.latestBlocks[0];
 
-		res.locals.difficultyAdjustmentData = utils.difficultyAdjustmentEstimates(eraStartBlockHeader, currentBlock);
+		// Use LWMA or Bitcoin-style difficulty adjustment based on configuration
+		if (useLWMA) {
+			// LWMA: Use block headers for weighted average calculation
+			const blockHeaders = res.locals.latestBlocks.map(b => ({
+				height: b.height,
+				time: b.time,
+				difficulty: b.difficulty
+			}));
+			res.locals.difficultyAdjustmentData = utils.lwmaDifficultyEstimates(blockHeaders);
+		} else {
+			res.locals.difficultyAdjustmentData = utils.difficultyAdjustmentEstimates(eraStartBlockHeader, currentBlock);
+		}
 
 		res.locals.nextHalvingData = utils.nextHalvingEstimates(
 			res.locals.difficultyPeriodFirstBlockHeader,

@@ -1475,6 +1475,116 @@ function difficultyAdjustmentEstimates(eraStartBlockHeader, currentBlockHeader) 
 	};
 }
 
+// LWMA (Linear Weighted Moving Average) difficulty adjustment estimation
+// Doriancoin adjusts difficulty every block using a weighted average of the last N blocks
+function lwmaDifficultyEstimates(recentBlockHeaders) {
+	const T = coinConfig.targetBlockTimeSeconds;  // Target block time (150 seconds for Doriancoin)
+	const N = coinConfig.lwmaWindow || 45;        // Window size (45 blocks)
+
+	// Need at least 3 blocks for meaningful calculation
+	if (!recentBlockHeaders || recentBlockHeaders.length < 3) {
+		return {
+			estimateAvailable: false,
+			usesLWMA: true
+		};
+	}
+
+	// Sort blocks by height descending (newest first)
+	const sortedBlocks = [...recentBlockHeaders].sort((a, b) => b.height - a.height);
+	const currentBlock = sortedBlocks[0];
+	const blocksAvailable = Math.min(sortedBlocks.length - 1, N);  // -1 because we need pairs
+
+	// Calculate weighted solve times (matching the actual LWMA algorithm)
+	// Weight increases from 1 (oldest) to N (newest)
+	let sumWeightedSolvetimes = new Decimal(0);
+	let sumWeights = new Decimal(0);
+	let totalSolvetime = 0;
+	let solvetimeCount = 0;
+
+	for (let i = 0; i < blocksAvailable; i++) {
+		const block = sortedBlocks[i];
+		const prevBlock = sortedBlocks[i + 1];
+
+		if (!prevBlock) break;
+
+		let solvetime = block.time - prevBlock.time;
+
+		// Clamp solvetime like the actual algorithm does
+		if (solvetime < 1) solvetime = 1;
+		if (solvetime > 6 * T) solvetime = 6 * T;
+
+		// Weight: newer blocks get higher weight
+		// When iterating from newest (i=0) to oldest (i=blocksAvailable-1)
+		// Weight should be: blocksAvailable for newest, 1 for oldest
+		const weight = blocksAvailable - i;
+
+		sumWeightedSolvetimes = sumWeightedSolvetimes.plus(new Decimal(solvetime).times(weight));
+		sumWeights = sumWeights.plus(weight);
+		totalSolvetime += solvetime;
+		solvetimeCount++;
+	}
+
+	if (sumWeights.eq(0) || solvetimeCount === 0) {
+		return {
+			estimateAvailable: false,
+			usesLWMA: true
+		};
+	}
+
+	// Calculate weighted average solve time
+	const weightedAvgSolvetime = sumWeightedSolvetimes.dividedBy(sumWeights);
+	const simpleAvgSolvetime = totalSolvetime / solvetimeCount;
+
+	// Calculate difficulty trend
+	// If blocks are coming faster than target, difficulty will increase (positive delta)
+	// If blocks are coming slower than target, difficulty will decrease (negative delta)
+	const targetRatio = new Decimal(T).dividedBy(weightedAvgSolvetime);
+
+	// Estimate difficulty change percentage
+	// LWMA: next difficulty is proportional to (target_time / actual_weighted_avg_time)
+	// So if blocks are 2x faster, difficulty increases ~2x (100% increase)
+	let diffAdjPercent = targetRatio.minus(1).times(100);
+
+	// Apply LWMA's symmetric caps (max 10x adjustment per block, but for estimation
+	// we'll show a more reasonable range for the display)
+	if (diffAdjPercent.gt(100)) {
+		diffAdjPercent = new Decimal(100);
+	}
+	if (diffAdjPercent.lt(-90)) {
+		diffAdjPercent = new Decimal(-90);
+	}
+
+	let diffAdjSign = diffAdjPercent.gte(0) ? "+" : "";
+	let textColorClass = diffAdjPercent.gte(0) ? "text-success" : "text-danger";
+
+	// Calculate time stats
+	const timePerBlockDuration = moment.duration(weightedAvgSolvetime.times(1000).toNumber());
+
+	return {
+		estimateAvailable: solvetimeCount >= 3,
+		usesLWMA: true,
+
+		// LWMA-specific data
+		windowSize: N,
+		blocksUsed: solvetimeCount,
+		weightedAvgSolvetime: weightedAvgSolvetime.toNumber(),
+		simpleAvgSolvetime: simpleAvgSolvetime,
+		targetSolvetime: T,
+
+		// Difficulty trend (per-block, but shown as current trend)
+		delta: diffAdjPercent,
+		sign: diffAdjSign,
+
+		// Average block time for halving estimates
+		timePerBlock: weightedAvgSolvetime.toNumber(),
+
+		// Current block info for compatibility
+		currentHeight: currentBlock.height,
+		firstBlockTime: sortedBlocks[sortedBlocks.length - 1].time,
+		nowTime: new Date().getTime() / 1000,
+	};
+}
+
 function nextHalvingEstimates(eraStartBlockHeader, currentBlockHeader, difficultyAdjustmentDataArg=null) {
 	let blockCount = currentBlockHeader.height;
 	let halvingBlockInterval = coinConfig.halvingBlockIntervalsByNetwork[global.activeBlockchain];
@@ -1500,9 +1610,16 @@ function nextHalvingEstimates(eraStartBlockHeader, currentBlockHeader, difficult
 		difficultyAdjustmentData = difficultyAdjustmentEstimates(eraStartBlockHeader, currentBlockHeader);
 	}
 
-	let blockCountAffectedByCurrentDifficultyDelta = Math.min(difficultyAdjustmentData.blocksLeft, blocksUntilNextHalving);
-	let currDifficultyEraTimeDifferential = (coinConfig.targetBlockTimeSeconds - difficultyAdjustmentData.timePerBlock) * blockCountAffectedByCurrentDifficultyDelta;
-
+	let currDifficultyEraTimeDifferential = 0;
+	if (difficultyAdjustmentData.usesLWMA) {
+		// LWMA: Use current timePerBlock for the entire remaining period
+		// since LWMA adjusts every block, the current trend is our best estimate
+		currDifficultyEraTimeDifferential = (coinConfig.targetBlockTimeSeconds - difficultyAdjustmentData.timePerBlock) * blocksUntilNextHalving;
+	} else {
+		// Bitcoin-style: Only apply current tempo to blocks remaining in current epoch
+		let blockCountAffectedByCurrentDifficultyDelta = Math.min(difficultyAdjustmentData.blocksLeft, blocksUntilNextHalving);
+		currDifficultyEraTimeDifferential = (coinConfig.targetBlockTimeSeconds - difficultyAdjustmentData.timePerBlock) * blockCountAffectedByCurrentDifficultyDelta;
+	}
 
 	let secondsUntilNextHalving = blocksUntilNextHalving * targetBlockTimeSeconds - currDifficultyEraTimeDifferential;
 	let daysUntilNextHalving = secondsUntilNextHalving / 60 / 60 / 24;
@@ -1732,6 +1849,7 @@ module.exports = {
 	xpubChangeVersionBytes: xpubChangeVersionBytes,
 	bip32Addresses: bip32Addresses,
 	difficultyAdjustmentEstimates: difficultyAdjustmentEstimates,
+	lwmaDifficultyEstimates: lwmaDifficultyEstimates,
 	nextHalvingEstimates: nextHalvingEstimates,
 	sleep: sleep,
 	obfuscateProperties: obfuscateProperties,
