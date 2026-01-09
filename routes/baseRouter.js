@@ -1573,6 +1573,7 @@ router.get("/address/:address", asyncHandler(async (req, res, next) => {
 			promises.push(utils.timePromise("address.getAddressDetails", async () => {
 				const addressDetailsResult = await addressApi.getAddressDetails(address, validateaddressResult.scriptPubKey, sort, limit, offset);
 				let addressDetails = addressDetailsResult.addressDetails;
+				console.log("Route handler addressDetails:", JSON.stringify(addressDetails, null, 2));
 
 				if (addressDetailsResult.errors) {
 					res.locals.addressDetailsErrors = addressDetailsResult.errors;
@@ -1580,6 +1581,7 @@ router.get("/address/:address", asyncHandler(async (req, res, next) => {
 
 				if (addressDetails) {
 					res.locals.addressDetails = addressDetails;
+					console.log("Route handler addressDetails.balanceSat:", addressDetails.balanceSat);
 
 					if (addressDetails.balanceSat == 0) {
 						// make sure zero balances pass the falsey check in the UI

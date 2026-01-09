@@ -235,10 +235,13 @@ function getAddressDetails(address, scriptPubkey, sort, limit, offset) {
 
 			if (balanceData) {
 				addressDetails.balanceSat = balanceData.confirmed;
+				console.log("Setting addressDetails.balanceSat to:", addressDetails.balanceSat);
 
 				if (balanceData.unconfirmed) {
 					addressDetails.unconfirmedBalanceSat = balanceData.unconfirmed;
 				}
+			} else {
+				console.log("balanceData is falsy in Promise.all callback:", balanceData);
 			}
 
 			var errors = [];
