@@ -198,11 +198,14 @@ function getAddressDetails(address, scriptPubkey, sort, limit, offset) {
 
 		promises.push(new Promise(function(resolve2, reject2) {
 			getAddressBalance(addrScripthash).then(function(result) {
+				console.log("getAddressBalance result:", JSON.stringify(result, null, 2));
 				balanceData = result.result;
+				console.log("balanceData:", JSON.stringify(balanceData, null, 2));
 
 				resolve2();
-				
+
 			}).catch(function(err) {
+				console.log("getAddressBalance error:", err);
 				err.userData = {address:address, sort:sort, limit:limit, offset:offset};
 
 				utils.logError("21307ws70sg", err);

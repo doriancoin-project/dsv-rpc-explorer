@@ -75,7 +75,7 @@ block content
 					- if (x.ismine) { flags.push(["Mine", "This address is owned by your node."]); }
 					- if (x.iswatchonly) { flags.push(["Watch-Only"]); }
 
-					- var summaryRowItemCount = ((addressEncoding && addressEncoding != "unknown") ? 1 : 0) + (addressDetails ? ((addressDetails.txCount != null ? 1 : 0) + (addressDetails.balanceSat ? 1 : 0) + (addressDetails.unconfirmedBalanceSat ? 1 : 0) + (addressDetails.totalReceivedSat ? 1 : 0)) : 0) + (flags.length > 0 ? 1 : 0);
+					- var summaryRowItemCount = ((addressEncoding && addressEncoding != "unknown") ? 1 : 0) + (addressDetails ? ((addressDetails.txCount != null ? 1 : 0) + (addressDetails.balanceSat != null ? 1 : 0) + (addressDetails.unconfirmedBalanceSat ? 1 : 0) + (addressDetails.totalReceivedSat ? 1 : 0)) : 0) + (flags.length > 0 ? 1 : 0);
 					if (summaryRowItemCount > 0)
 						.clearfix
 							.float-start
@@ -94,7 +94,7 @@ block content
 									+summaryItem("Transactions")
 										| #{addressDetails.txCount.toLocaleString()}
 
-								if (addressDetails && addressDetails.balanceSat)
+								if (addressDetails && addressDetails.balanceSat != null)
 									+summaryItem("Balance")
 										span(class=(addressDetails.balanceSat > 0 ? "text-success" : false))
 											- var currencyValue = new Decimal(addressDetails.balanceSat).dividedBy(coinConfig.baseCurrencyUnit.multiplier);
