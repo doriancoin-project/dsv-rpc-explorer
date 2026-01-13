@@ -11,11 +11,11 @@ block content
 		h6.mb-2 About the Difficulty Adjustment
 
 		ul.mb-0.ms-n3
-			li Mining difficulty adjusts automatically every #{coinConfig.difficultyAdjustmentBlockCount.toLocaleString()} blocks.
+			li Doriancoin uses LWMA (Linear Weighted Moving Average) difficulty adjustment, where difficulty adjusts on every block based on a weighted average of recent block times.
 			li The adjustment aims to maintain an average block-mining time of #{coinConfig.targetBlockTimeMinutes} minutes.
-			li An increase in the difficulty indicates that the average block-mining time during the previous adjustment epoch was less than #{coinConfig.targetBlockTimeMinutes} minutes (due to more miners joining the network and searching for blocks).
-			li A decrease in difficulty indicates miners have left the network so finding each block is adjusted to be easier for the smaller number remaining.
-			li The numeric Difficulty is a multiple of the difficulty of finding the easiest block (Block #0) - e.g. blocks in later epochs are many times harder to mine than those in epoch 0.
+			li An increase in difficulty indicates blocks are being found faster than target (more miners on the network).
+			li A decrease in difficulty indicates blocks are being found slower than target (fewer miners on the network).
+			li The chart below samples difficulty at regular intervals to show the overall trend.
 
 			
 
@@ -71,10 +71,10 @@ block content
 								table.table.table-striped.table-borderless.mb-3
 									thead
 										tr
-											th.text-end.text-card-highlight.text-uppercase.fw-light Epoch
-											th.text-end.text-card-highlight.text-uppercase.fw-light Start Block
+											th.text-end.text-card-highlight.text-uppercase.fw-light #
+											th.text-end.text-card-highlight.text-uppercase.fw-light Block
 											th.text-end.text-card-highlight.fw-light
-												span.text-uppercase Start Date
+												span.text-uppercase Date
 												small.ms-1 (utc)
 											//th Date
 											//th.text-end Block Start
@@ -200,21 +200,15 @@ block endOfBody
 			summary.difficultyData.reverse();
 			summary.difficultyDeltaData.reverse();
 
-			let latestBlockStart = 2016 * (summary.difficultyData.length - 1);
-
 			for (var i = 0; i < summary.difficultyData.length; i++) {
 				var item = summary.difficultyData[i];
 				var deltaItem = summary.difficultyDeltaData[i];
 
 				var row = $("#difficulty-table-row-prototype").clone();
 				row.attr("id", null);
-				//row.addClass("fee-rate-table-row");
 
-				var startBlock = latestBlockStart - 2016 * i;
-				//var startBlock = 2016 * i;
-
-				row.find(".data-epoch").text(item.epoch);
-				row.find(".data-start-block").html(`<a href="./block-height/${startBlock}">${startBlock.toLocaleString()}</a>`);
+				row.find(".data-epoch").text(summary.difficultyData.length - i);
+				row.find(".data-start-block").html(`<a href="./block-height/${item.blockHeight}">${item.blockHeight.toLocaleString()}</a>`);
 				row.find(".data-start-date").text(new Date(item.date * 1000).toISOString().slice(0, 10));
 				//row.find(".data-date").text(item.count.toLocaleString());
 				//row.find(".data-block-start").text(sumBlockCount.toDP(2));
@@ -316,7 +310,7 @@ block endOfBody
 							position: 'bottom',
 							scaleLabel: {
 								display: true,
-								labelString: 'Difficulty Epoch'
+								labelString: 'Block Height'
 							},
 							grid: {
 								color: gridLineColor
@@ -402,15 +396,15 @@ block endOfBody
 				var heightStr = `${raw.heights[i]}`;
 				var previousHeightStr = `${raw.heights[i - 1]}`;
 
-				summary.difficultyData.push({epoch:i, date:raw[heightStr].time, difficulty:raw[heightStr].difficulty});
+				summary.difficultyData.push({epoch:i, blockHeight:raw.heights[i], date:raw[heightStr].time, difficulty:raw[heightStr].difficulty});
 
-				summary.graphData.push({x:i, y:raw[heightStr].difficulty});
+				summary.graphData.push({x:raw.heights[i], y:raw[heightStr].difficulty});
 
 				var yearIndex = Math.floor((raw.heights.length - i) / 26);
 
 				for (let j = 0; j < yearItems.length; j++) {
 					if (yearIndex < yearItems[j][1]) {
-						summary.graphData_years[yearItems[j][1]].push({x:i, y:raw[heightStr].difficulty});
+						summary.graphData_years[yearItems[j][1]].push({x:raw.heights[i], y:raw[heightStr].difficulty});
 					}
 				}
 
@@ -418,7 +412,7 @@ block endOfBody
 				if (i == 0) {
 					for (let j = 0; j < yearItems.length; j++) {
 						if (yearIndex < yearItems[j][1]) {
-							summary.changeGraphData_years[yearItems[j][1]].push({x:i, y:0});
+							summary.changeGraphData_years[yearItems[j][1]].push({x:raw.heights[i], y:0});
 						}
 					}
 
@@ -453,7 +447,7 @@ block endOfBody
 
 					for (let j = 0; j < yearItems.length; j++) {
 						if (yearIndex < yearItems[j][1]) {
-							summary.changeGraphData_years[yearItems[j][1]].push({x:i, y:deltaPercent});
+							summary.changeGraphData_years[yearItems[j][1]].push({x:raw.heights[i], y:deltaPercent});
 						}
 					}
 				}
