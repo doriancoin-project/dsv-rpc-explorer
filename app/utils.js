@@ -1071,11 +1071,18 @@ function outputTypeAbbreviation(outputType) {
 		"witness_v0_scripthash": "P2WSH",
 		"witness_v1_taproot": "P2TR",
 		"nonstandard": "nonstandard",
-		"nulldata": "nulldata"
+		"nulldata": "nulldata",
+		"witness_mweb_hogex": "MWEB",
+		"witness_mweb_pegin": "MWEB-in",
+		"mweb_hogex": "MWEB",
+		"mweb_pegin": "MWEB-in"
 	};
 
 	if (map[outputType]) {
 		return map[outputType];
+
+	} else if (outputType && outputType.includes("mweb")) {
+		return "MWEB";
 
 	} else {
 		return "???";
@@ -1092,11 +1099,18 @@ function outputTypeName(outputType) {
 		"witness_v0_scripthash": "Witness, v0 Script Hash",
 		"witness_v1_taproot": "Witness, v1 Taproot",
 		"nonstandard": "Non-Standard",
-		"nulldata": "Null Data"
+		"nulldata": "Null Data",
+		"witness_mweb_hogex": "MWEB Peg-Out (HogEx)",
+		"witness_mweb_pegin": "MWEB Peg-In",
+		"mweb_hogex": "MWEB Peg-Out (HogEx)",
+		"mweb_pegin": "MWEB Peg-In"
 	};
 
 	if (map[outputType]) {
 		return map[outputType];
+
+	} else if (outputType && outputType.includes("mweb")) {
+		return "MWEB Output";
 
 	} else {
 		return "???";
