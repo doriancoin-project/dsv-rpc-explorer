@@ -611,6 +611,9 @@ function identifyMiner(coinbaseTx, blockHeight) {
 		for (let i = 0; i < coinbaseTx.vout.length; i++) {
 			const vout = coinbaseTx.vout[i];
 
+			if (vout.value == null) {
+				continue;
+			}
 			const voutValue = new Decimal(vout.value);
 			if (voutValue > 0) {
 				const address = getVoutAddress(vout);
@@ -660,7 +663,10 @@ function getTxTotalInputOutputValues(tx, txInputs, blockHeight) {
 		}
 
 		for (let i = 0; i < tx.vout.length; i++) {
-			totalOutputValue = totalOutputValue.plus(new Decimal(tx.vout[i].value));
+			// Skip MWEB peg-out outputs with undefined/confidential values
+			if (tx.vout[i].value != null) {
+				totalOutputValue = totalOutputValue.plus(new Decimal(tx.vout[i].value));
+			}
 		}
 	} catch (err) {
 		logError("2308sh0sg44", err, {tx:tx, txInputs:txInputs, blockHeight:blockHeight});

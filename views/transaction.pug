@@ -56,7 +56,8 @@ block content
 
 		- var totalOutputValue = new Decimal(0);
 		each vout, voutIndex in result.getrawtransaction.vout
-			- totalOutputValue = totalOutputValue.plus(new Decimal(vout.value));
+			if (vout.value != null)
+				- totalOutputValue = totalOutputValue.plus(new Decimal(vout.value));
 
 		div.tab-content
 			+pageTab("Details", true)
@@ -178,7 +179,7 @@ block content
 					if (result.txInputs && result.txInputs[xInputIndex])
 						- var vout = result.txInputs[xInputIndex];
 						
-						if (vout.utxoTime)
+						if (vout.utxoTime && vout.value != null)
 							- var dt = result.getrawtransaction.time - vout.utxoTime;
 							- var dtDays = dt / 60 / 60 / 24;
 							- daysDestroyed = daysDestroyed.plus(new Decimal(vout.value).times(dtDays));

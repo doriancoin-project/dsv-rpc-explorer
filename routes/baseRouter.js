@@ -1720,7 +1720,7 @@ router.get("/address/:address", asyncHandler(async (req, res, next) => {
 								let vinJ = tx.vin[j];
 
 								if (txInput != null) {
-									if (txInput && txInput.scriptPubKey) {
+									if (txInput && txInput.scriptPubKey && txInput.value != null) {
 										if (utils.getVoutAddresses(txInput).includes(address)) {
 											if (addrLossesByTx[tx.txid] == null) {
 												addrLossesByTx[tx.txid] = new Decimal(0);

@@ -1064,12 +1064,14 @@ function summarizeBlockAnalysisData(blockHeight, tx, inputs) {
 			if (inputs) {
 				let inputVout = inputs[i];
 
-				txSummary.totalInput = txSummary.totalInput.plus(new Decimal(inputVout.value));
+				if (inputVout.value != null) {
+					txSummary.totalInput = txSummary.totalInput.plus(new Decimal(inputVout.value));
 
-				let timeDestroyed = tx.time - inputVout.utxoTime;
-				let daysDestroyed = timeDestroyed / SECONDS_PER_DAY;
+					let timeDestroyed = tx.time - inputVout.utxoTime;
+					let daysDestroyed = timeDestroyed / SECONDS_PER_DAY;
 
-				txSummary.totalDaysDestroyed = txSummary.totalDaysDestroyed.plus(new Decimal(inputVout.value).times(daysDestroyed));
+					txSummary.totalDaysDestroyed = txSummary.totalDaysDestroyed.plus(new Decimal(inputVout.value).times(daysDestroyed));
+				}
 
 				//console.log(`tx:id=${tx.txid}, tx.time=${tx.time}, inputVout.time=${inputVout.time}, input=${i}, TD=${timeDestroyed}, DD=${daysDestroyed}`);
 				//console.log(`inputVout: ${JSON.stringify(inputVout)}`);
@@ -1089,12 +1091,15 @@ function summarizeBlockAnalysisData(blockHeight, tx, inputs) {
 	txSummary.totalOutput = new Decimal(0);
 
 	for (let i = 0; i < tx.vout.length; i++) {
-		txSummary.totalOutput = txSummary.totalOutput.plus(new Decimal(tx.vout[i].value));
+		// Skip MWEB peg-out outputs with undefined/confidential values
+		if (tx.vout[i].value != null) {
+			txSummary.totalOutput = txSummary.totalOutput.plus(new Decimal(tx.vout[i].value));
+		}
 
 		txSummary.vout.push({
 			value: tx.vout[i].value,
-			type: tx.vout[i].scriptPubKey.type,
-			reqSigs: tx.vout[i].scriptPubKey.reqSigs,
+			type: tx.vout[i].scriptPubKey ? tx.vout[i].scriptPubKey.type : null,
+			reqSigs: tx.vout[i].scriptPubKey ? tx.vout[i].scriptPubKey.reqSigs : null,
 			addressCount: utils.getVoutAddresses(tx.vout[i]).length
 		});
 	}
