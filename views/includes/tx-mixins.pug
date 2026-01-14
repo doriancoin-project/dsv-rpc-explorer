@@ -20,7 +20,7 @@ mixin inputValueDisplay(tx, txVin, vout)
 
 
 mixin outputValueDisplay(tx, vout, voutIndex, nonZeroVoutValueCount)
-	if (vout.value > 0 && vout.scriptPubKey.asm && vout.scriptPubKey.asm.startsWith('OP_RETURN '))
+	if (vout.value > 0 && vout.scriptPubKey && vout.scriptPubKey.asm && vout.scriptPubKey.asm.startsWith('OP_RETURN '))
 		span(title="Burned output - as an OP_RETURN output, this value is provably unspendable." data-bs-toggle="tooltip")
 			i.bi-fire.text-danger.me-2
 
@@ -28,7 +28,7 @@ mixin outputValueDisplay(tx, vout, voutIndex, nonZeroVoutValueCount)
 		span(class=(nonZeroVoutValueCount == 1 ? "fw-bold" : "fw-light"))
 			+valueDisplay(vout.value)
 
-	if (!vout.scriptPubKey.asm || !vout.scriptPubKey.asm.startsWith('OP_RETURN '))
+	if (!vout.scriptPubKey || !vout.scriptPubKey.asm || !vout.scriptPubKey.asm.startsWith('OP_RETURN '))
 		if (utxos)
 			if (utxos[voutIndex])
 				span(title="This output remains unspent (a valid UTXO)." data-bs-toggle="tooltip")
@@ -302,7 +302,10 @@ mixin txIoDetails(tx, txInputs, totalIOValues, blockHeight, options={})
 							else if (vout.scriptPubKey.asm && !vout.scriptPubKey.asm.startsWith("OP_RETURN "))
 								.my-2
 									+hexDataDisplay(vout.scriptPubKey.hex)
-
+						else if (vout && !vout.scriptPubKey && voutAddresses.length == 0)
+							.my-2.text-muted.small
+								i.bi-shield-lock.me-1
+								span MWEB peg-out output
 
 						if (voutAddresses.length > 0)
 							.d-inline.d-lg-block.mt-lg-2
