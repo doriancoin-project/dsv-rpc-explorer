@@ -90,6 +90,12 @@ module.exports = {
 		"test": 100,
 		"regtest": 500
 	},
+	// LWMAv2 fixes feedback loop instability by using window-start target as reference
+	lwmaV2ActivationHeightByNetwork: {
+		"main": 1244300,
+		"test": 200,
+		"regtest": 600
+	},
 	lwmaWindow: 45,  // 45-block averaging window
 	maxSupplyByNetwork: {
 		"main": new Decimal(84000000),

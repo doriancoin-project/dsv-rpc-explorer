@@ -1497,6 +1497,7 @@ function difficultyAdjustmentEstimates(eraStartBlockHeader, currentBlockHeader) 
 
 // LWMA (Linear Weighted Moving Average) difficulty adjustment estimation
 // Doriancoin adjusts difficulty every block using a weighted average of the last N blocks
+// LWMAv2 (activated at specific heights) uses window-start target as reference instead of previous block
 function lwmaDifficultyEstimates(recentBlockHeaders) {
 	const T = coinConfig.targetBlockTimeSeconds;  // Target block time (150 seconds for Doriancoin)
 	const N = coinConfig.lwmaWindow || 45;        // Window size (45 blocks)
@@ -1513,6 +1514,10 @@ function lwmaDifficultyEstimates(recentBlockHeaders) {
 	const sortedBlocks = [...recentBlockHeaders].sort((a, b) => b.height - a.height);
 	const currentBlock = sortedBlocks[0];
 	const blocksAvailable = Math.min(sortedBlocks.length - 1, N);  // -1 because we need pairs
+
+	// Determine if we're using LWMAv2 (window-start reference) based on block height
+	const lwmaV2Height = coinConfig.lwmaV2ActivationHeightByNetwork?.[global.activeBlockchain] || Infinity;
+	const useLWMAv2 = currentBlock.height >= lwmaV2Height;
 
 	// Calculate weighted solve times (matching the actual LWMA algorithm)
 	// Weight increases from 1 (oldest) to N (newest)
@@ -1555,23 +1560,50 @@ function lwmaDifficultyEstimates(recentBlockHeaders) {
 	const weightedAvgSolvetime = sumWeightedSolvetimes.dividedBy(sumWeights);
 	const simpleAvgSolvetime = totalSolvetime / solvetimeCount;
 
-	// Calculate difficulty trend
-	// If blocks are coming faster than target, difficulty will increase (positive delta)
-	// If blocks are coming slower than target, difficulty will decrease (negative delta)
-	const targetRatio = new Decimal(T).dividedBy(weightedAvgSolvetime);
+	// ratio = sumWeightedSolvetimes / expectedWeightedSolvetimes
+	// This is the core LWMA ratio used to adjust difficulty
+	const expectedWeightedSolvetimes = sumWeights.times(T);
+	const lwmaRatio = sumWeightedSolvetimes.dividedBy(expectedWeightedSolvetimes);
 
-	// Estimate difficulty change percentage
-	// LWMA: next difficulty is proportional to (target_time / actual_weighted_avg_time)
-	// So if blocks are 2x faster, difficulty increases ~2x (100% increase)
-	let diffAdjPercent = targetRatio.minus(1).times(100);
+	// Calculate difficulty change percentage
+	let diffAdjPercent;
 
-	// Apply LWMA's symmetric caps (max 10x adjustment per block, but for estimation
-	// we'll show a more reasonable range for the display)
-	if (diffAdjPercent.gt(100)) {
-		diffAdjPercent = new Decimal(100);
-	}
-	if (diffAdjPercent.lt(-90)) {
-		diffAdjPercent = new Decimal(-90);
+	if (useLWMAv2 && blocksAvailable >= 3) {
+		// LWMAv2: nextTarget = windowStartTarget * ratio
+		// nextDifficulty = windowStartDifficulty / ratio
+		// percentChange = (nextDifficulty - currentDifficulty) / currentDifficulty * 100
+		//
+		// The window-start block is blocksAvailable blocks back from current
+		const windowStartBlock = sortedBlocks[blocksAvailable];
+		const currentDifficulty = new Decimal(currentBlock.difficulty);
+		const windowStartDifficulty = new Decimal(windowStartBlock?.difficulty || currentBlock.difficulty);
+
+		// nextDifficulty = windowStartDifficulty / lwmaRatio
+		const nextDifficulty = windowStartDifficulty.dividedBy(lwmaRatio);
+		diffAdjPercent = nextDifficulty.minus(currentDifficulty).dividedBy(currentDifficulty).times(100);
+
+		// Apply LWMAv2's tighter symmetric caps (max 3x adjustment)
+		// 3x increase means +200%, 3x decrease means -66.67%
+		if (diffAdjPercent.gt(200)) {
+			diffAdjPercent = new Decimal(200);
+		}
+		if (diffAdjPercent.lt(-66.67)) {
+			diffAdjPercent = new Decimal(-66.67);
+		}
+	} else {
+		// LWMAv1: nextTarget = prevTarget * ratio
+		// nextDifficulty = prevDifficulty / ratio
+		// percentChange = (1/ratio - 1) * 100
+		const targetRatio = new Decimal(T).dividedBy(weightedAvgSolvetime);  // = 1/lwmaRatio
+		diffAdjPercent = targetRatio.minus(1).times(100);
+
+		// Apply LWMAv1's symmetric caps (max 10x adjustment)
+		if (diffAdjPercent.gt(100)) {
+			diffAdjPercent = new Decimal(100);
+		}
+		if (diffAdjPercent.lt(-90)) {
+			diffAdjPercent = new Decimal(-90);
+		}
 	}
 
 	let diffAdjSign = diffAdjPercent.gte(0) ? "+" : "";
@@ -1583,6 +1615,7 @@ function lwmaDifficultyEstimates(recentBlockHeaders) {
 	return {
 		estimateAvailable: solvetimeCount >= 3,
 		usesLWMA: true,
+		usesLWMAv2: useLWMAv2,
 
 		// LWMA-specific data
 		windowSize: N,
