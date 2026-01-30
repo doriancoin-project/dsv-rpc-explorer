@@ -9,16 +9,22 @@ block content
 			+pageTitle("Blocks")
 		.float-end
 			if (blocks)
-				nav(aria-label="Page navigation")
-					ul.pagination.justify-content-center.mt-3
-						
-						li.page-item(class=(sort == "desc" ? "active" : false))
-							a.page-link(href=(sort == "desc" ? "javascript:void(0)" : `./blocks?limit=${limit}&offset=0&sort=desc`))
-								span(aria-hidden="true") Newest blocks first
+				.d-flex.align-items-center.mt-3.gap-2
+					.me-2
+						label.form-label.mb-0.text-muted.small Per page:
+						select.form-select.form-select-sm.ms-1.d-inline-block(style="width: auto;", onchange=`window.location='./blocks?limit='+this.value+'&offset=0&sort=${sort}'`)
+							each val in [10, 25, 50, 100]
+								option(value=val, selected=(limit == val)) #{val}
+					nav(aria-label="Page navigation")
+						ul.pagination.justify-content-center.mb-0
 
-						li.page-item(class=(sort == "asc" ? "active" : false))
-							a.page-link(href=(sort == "asc" ? "javascript:void(0)" : `./blocks?limit=${limit}&offset=0&sort=asc`))
-								span(aria-hidden="true") Oldest blocks first
+							li.page-item(class=(sort == "desc" ? "active" : false))
+								a.page-link(href=(sort == "desc" ? "javascript:void(0)" : `./blocks?limit=${limit}&offset=0&sort=desc`))
+									span(aria-hidden="true") Newest blocks first
+
+							li.page-item(class=(sort == "asc" ? "active" : false))
+								a.page-link(href=(sort == "asc" ? "javascript:void(0)" : `./blocks?limit=${limit}&offset=0&sort=asc`))
+									span(aria-hidden="true") Oldest blocks first
 
 	if (blocks)
 		+contentSection

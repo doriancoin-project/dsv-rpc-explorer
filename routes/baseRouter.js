@@ -536,6 +536,11 @@ router.get("/blocks", asyncHandler(async (req, res, next) => {
 
 		if (req.query.limit) {
 			limit = parseInt(req.query.limit);
+
+			// cap to a reasonable maximum
+			if (limit > 100) {
+				limit = 100;
+			}
 		}
 
 		if (req.query.offset) {
