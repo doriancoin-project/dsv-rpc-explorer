@@ -11,7 +11,8 @@ block content
 		h6.mb-2 About the Difficulty Adjustment
 
 		ul.mb-0.ms-n3
-			li Doriancoin uses LWMA (Linear Weighted Moving Average) difficulty adjustment, where difficulty adjusts on every block based on a weighted average of recent block times.
+			li Doriancoin uses ASERT (Absolutely Scheduled Exponentially Rising Targets) difficulty adjustment, where difficulty adjusts on every block using an exponential formula with a 1-hour half-life.
+			li Previous algorithms: Bitcoin-style 2016-block epochs (before block 1,243,845), LWMA (blocks 1,243,845-1,245,999), and now ASERT (from block 1,246,000).
 			li The adjustment aims to maintain an average block-mining time of #{coinConfig.targetBlockTimeMinutes} minutes.
 			li An increase in difficulty indicates blocks are being found faster than target (more miners on the network).
 			li A decrease in difficulty indicates blocks are being found slower than target (fewer miners on the network).

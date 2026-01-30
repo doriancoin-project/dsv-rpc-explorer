@@ -97,6 +97,16 @@ module.exports = {
 		"regtest": 600
 	},
 	lwmaWindow: 45,  // 45-block averaging window
+
+	// Doriancoin uses ASERT (Absolutely Scheduled Exponentially Rising Targets) after LWMA
+	useASERT: true,
+	asertActivationHeightByNetwork: {
+		"main": 1246000,
+		"test": 300,
+		"regtest": 700
+	},
+	asertHalfLife: 3600,  // 1 hour half-life
+
 	maxSupplyByNetwork: {
 		"main": new Decimal(84000000),
 		"test": new Decimal(84000000),

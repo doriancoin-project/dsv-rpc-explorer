@@ -1638,6 +1638,91 @@ function lwmaDifficultyEstimates(recentBlockHeaders) {
 	};
 }
 
+// ASERT (Absolutely Scheduled Exponentially Rising Targets) difficulty adjustment estimation
+// Uses an exponential formula: delta = (2^((T - avgSolvetime) / halfLife) - 1) * 100
+// where T is target block time (150s) and halfLife is 3600s (1 hour)
+function asertDifficultyEstimates(recentBlockHeaders) {
+	const T = coinConfig.targetBlockTimeSeconds;  // Target block time (150 seconds for Doriancoin)
+	const halfLife = coinConfig.asertHalfLife || 3600;  // Half-life in seconds (1 hour)
+	const N = coinConfig.lwmaWindow || 45;  // Use same window size for averaging
+
+	// Need at least 3 blocks for meaningful calculation
+	if (!recentBlockHeaders || recentBlockHeaders.length < 3) {
+		return {
+			estimateAvailable: false,
+			usesASERT: true
+		};
+	}
+
+	// Sort blocks by height descending (newest first)
+	const sortedBlocks = [...recentBlockHeaders].sort((a, b) => b.height - a.height);
+	const currentBlock = sortedBlocks[0];
+	const blocksAvailable = Math.min(sortedBlocks.length - 1, N);  // -1 because we need pairs
+
+	// Calculate simple (unweighted) average solve time
+	let totalSolvetime = 0;
+	let solvetimeCount = 0;
+
+	for (let i = 0; i < blocksAvailable; i++) {
+		const block = sortedBlocks[i];
+		const prevBlock = sortedBlocks[i + 1];
+
+		if (!prevBlock) break;
+
+		let solvetime = block.time - prevBlock.time;
+
+		// Clamp solvetime to reasonable bounds
+		if (solvetime < 1) solvetime = 1;
+		if (solvetime > 6 * T) solvetime = 6 * T;
+
+		totalSolvetime += solvetime;
+		solvetimeCount++;
+	}
+
+	if (solvetimeCount === 0) {
+		return {
+			estimateAvailable: false,
+			usesASERT: true
+		};
+	}
+
+	const simpleAvgSolvetime = totalSolvetime / solvetimeCount;
+
+	// ASERT formula: delta = (2^((T - avgSolvetime) / halfLife) - 1) * 100
+	// When blocks are fast (avgSolvetime < T), delta is positive (difficulty rising)
+	// When blocks are slow (avgSolvetime > T), delta is negative (difficulty falling)
+	const exponent = (T - simpleAvgSolvetime) / halfLife;
+	const diffAdjPercent = new Decimal((Math.pow(2, exponent) - 1) * 100);
+
+	let diffAdjSign = diffAdjPercent.gte(0) ? "+" : "";
+
+	// Calculate time stats
+	const timePerBlockDuration = moment.duration(simpleAvgSolvetime * 1000);
+
+	return {
+		estimateAvailable: solvetimeCount >= 3,
+		usesASERT: true,
+
+		// ASERT-specific data
+		halfLife: halfLife,
+		blocksUsed: solvetimeCount,
+		simpleAvgSolvetime: simpleAvgSolvetime,
+		targetSolvetime: T,
+
+		// Difficulty trend
+		delta: diffAdjPercent,
+		sign: diffAdjSign,
+
+		// Average block time for halving estimates
+		timePerBlock: simpleAvgSolvetime,
+
+		// Current block info
+		currentHeight: currentBlock.height,
+		firstBlockTime: sortedBlocks[sortedBlocks.length - 1].time,
+		nowTime: new Date().getTime() / 1000,
+	};
+}
+
 function nextHalvingEstimates(eraStartBlockHeader, currentBlockHeader, difficultyAdjustmentDataArg=null) {
 	let blockCount = currentBlockHeader.height;
 	let halvingBlockInterval = coinConfig.halvingBlockIntervalsByNetwork[global.activeBlockchain];
@@ -1664,9 +1749,9 @@ function nextHalvingEstimates(eraStartBlockHeader, currentBlockHeader, difficult
 	}
 
 	let currDifficultyEraTimeDifferential = 0;
-	if (difficultyAdjustmentData.usesLWMA) {
-		// LWMA: Use current timePerBlock for the entire remaining period
-		// since LWMA adjusts every block, the current trend is our best estimate
+	if (difficultyAdjustmentData.usesLWMA || difficultyAdjustmentData.usesASERT) {
+		// LWMA/ASERT: Use current timePerBlock for the entire remaining period
+		// since these algorithms adjust every block, the current trend is our best estimate
 		currDifficultyEraTimeDifferential = (coinConfig.targetBlockTimeSeconds - difficultyAdjustmentData.timePerBlock) * blocksUntilNextHalving;
 	} else {
 		// Bitcoin-style: Only apply current tempo to blocks remaining in current epoch
@@ -1903,6 +1988,7 @@ module.exports = {
 	bip32Addresses: bip32Addresses,
 	difficultyAdjustmentEstimates: difficultyAdjustmentEstimates,
 	lwmaDifficultyEstimates: lwmaDifficultyEstimates,
+	asertDifficultyEstimates: asertDifficultyEstimates,
 	nextHalvingEstimates: nextHalvingEstimates,
 	sleep: sleep,
 	obfuscateProperties: obfuscateProperties,

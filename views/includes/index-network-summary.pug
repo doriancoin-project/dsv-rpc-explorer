@@ -198,7 +198,36 @@ if (exchangeRates)
 				| #{chainTxStats[7 * targetBlocksPerDay].window_tx_count.toLocaleString()}
 
 		if (difficultyAdjustmentData)
-			if (difficultyAdjustmentData.usesLWMA)
+			if (difficultyAdjustmentData.usesASERT)
+				//- ASERT: Difficulty adjusts every block using exponential formula
+				- var avgBlockTime = difficultyAdjustmentData.simpleAvgSolvetime ? new Decimal(difficultyAdjustmentData.simpleAvgSolvetime).toDP(1) : 0;
+				- var targetTime = difficultyAdjustmentData.targetSolvetime || coinConfig.targetBlockTimeSeconds;
+				- var desc = `Current difficulty trend based on ASERT (Absolutely Scheduled Exponentially Rising Targets). Difficulty adjusts every block using an exponential formula with a ${difficultyAdjustmentData.halfLife || 3600}s half-life. Recent avg: ${avgBlockTime}s (target: ${targetTime}s).`;
+
+				if (false)
+					pre
+						code.json #{JSON.stringify(difficultyAdjustmentData, null, 4)}
+
+				+summaryItem("Difficulty Δ", difficultyAdjustmentData.estimateAvailable ? desc : null)
+					if (difficultyAdjustmentData.estimateAvailable)
+						span(class=(difficultyAdjustmentData.delta >= 0 ? "text-success" : "text-danger"))
+							if (difficultyAdjustmentData.sign == "+")
+								| +
+
+							| #{difficultyAdjustmentData.delta.toDP(2)}
+							small.ms-1 %
+
+						span.text-tiny.text-muted.ms-2
+							| (
+							- var blocksUsedStr = difficultyAdjustmentData.blocksUsed ? difficultyAdjustmentData.blocksUsed : 45;
+							span.border-dotted(title=`ASERT uses a ${blocksUsedStr}-block average with ${difficultyAdjustmentData.halfLife || 3600}s half-life. Avg block time: ${avgBlockTime}s, Target: ${targetTime}s`, data-bs-toggle="tooltip") ~#{avgBlockTime}s avg
+							| )
+
+					else
+						small.border-dotted.text-muted(title="Estimate pending...<br/>Not enough blocks for ASERT calculation yet.", data-bs-toggle="tooltip", data-bs-html="true")
+							i.bi-hourglass-split
+
+			else if (difficultyAdjustmentData.usesLWMA)
 				//- LWMA: Difficulty adjusts every block based on weighted average of last N blocks
 				- var avgBlockTime = difficultyAdjustmentData.weightedAvgSolvetime ? new Decimal(difficultyAdjustmentData.weightedAvgSolvetime).toDP(1) : 0;
 				- var targetTime = difficultyAdjustmentData.targetSolvetime || coinConfig.targetBlockTimeSeconds;

@@ -132,13 +132,19 @@ router.get("/", asyncHandler(async (req, res, next) => {
 		const useLWMA = coinConfig.useLWMA && lwmaActivationHeight && getblockchaininfo.blocks >= lwmaActivationHeight;
 		res.locals.useLWMA = useLWMA;
 
+		// Check if we're using ASERT difficulty adjustment (supersedes LWMA)
+		const asertActivationHeight = coinConfig.asertActivationHeightByNetwork ?
+			coinConfig.asertActivationHeightByNetwork[global.activeBlockchain] : null;
+		const useASERT = coinConfig.useASERT && asertActivationHeight && getblockchaininfo.blocks >= asertActivationHeight;
+		res.locals.useASERT = useASERT;
+
 
 		let blockHeights = [];
 		if (getblockchaininfo.blocks) {
-			// For LWMA, we need at least lwmaWindow+1 blocks for calculation
+			// For LWMA/ASERT, we need at least lwmaWindow+1 blocks for calculation
 			// Otherwise, +1 to page size here so we have the next block to calculate T.T.M.
 			const lwmaWindow = coinConfig.lwmaWindow || 45;
-			const blocksNeeded = useLWMA ?
+			const blocksNeeded = (useLWMA || useASERT) ?
 				Math.max(config.site.homepage.recentBlocksCount + 1, lwmaWindow + 1) :
 				(config.site.homepage.recentBlocksCount + 1);
 
@@ -234,8 +240,16 @@ router.get("/", asyncHandler(async (req, res, next) => {
 		let eraStartBlockHeader = res.locals.difficultyPeriodFirstBlockHeader;
 		let currentBlock = res.locals.latestBlocks[0];
 
-		// Use LWMA or Bitcoin-style difficulty adjustment based on configuration
-		if (useLWMA) {
+		// Use ASERT, LWMA, or Bitcoin-style difficulty adjustment based on configuration
+		if (useASERT) {
+			// ASERT: Use block headers for exponential difficulty calculation
+			const blockHeaders = res.locals.latestBlocks.map(b => ({
+				height: b.height,
+				time: b.time,
+				difficulty: b.difficulty
+			}));
+			res.locals.difficultyAdjustmentData = utils.asertDifficultyEstimates(blockHeaders);
+		} else if (useLWMA) {
 			// LWMA: Use block headers for weighted average calculation
 			const blockHeaders = res.locals.latestBlocks.map(b => ({
 				height: b.height,
