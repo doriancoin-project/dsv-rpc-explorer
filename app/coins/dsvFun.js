@@ -13,7 +13,17 @@ module.exports = {
 			blockHeight: 0,
 			blockHash: "d21da25e277bd20b7456087d69c5fee2ebc6091b410271b5cb0623c7d1e7d1b9",
 			summary: "Doriancoin Genesis Block",
-			alertBodyHtml: "This is the first block in the Doriancoin blockchain, known as the <b>Genesis Block</b>.",
+			alertBodyHtml: "This is the first block in the Doriancoin blockchain, known as the <b>Genesis Block</b>. The coinbase contains the message: <b>\"LA Times 08/Mar/2014 For Dorian Nakamoto, bitcoin article brings denials, intrigue\"</b> - a reference to the infamous Newsweek article that incorrectly identified Dorian Nakamoto as Bitcoin's creator.",
+			referenceUrl: "https://www.newsweek.com/2014/03/14/face-behind-bitcoin-247957.html"
+		},
+		{
+			type: "tx",
+			date: "2014-03-09",
+			chain: "main",
+			txid: "a27b7d0a286e46fae3cb7e5b1eae6001fc1b15afee2f6a147291e7eb19746d5d",
+			blockHeight: 0,
+			summary: "Coinbase transaction of the Genesis Block",
+			alertBodyHtml: "This is the <b>coinbase transaction</b> of the <a href='./block/d21da25e277bd20b7456087d69c5fee2ebc6091b410271b5cb0623c7d1e7d1b9'>Doriancoin Genesis Block</a>. Like Bitcoin's genesis coinbase, this transaction is unspendable due to a quirk in how the genesis block is handled in the code.",
 			referenceUrl: ""
 		},
 		{

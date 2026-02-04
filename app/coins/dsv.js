@@ -150,14 +150,42 @@ module.exports = {
 		"test":	"707769464eb59fdd7b75cdbc5f0e72226345281852325c965b8ee1fd592fbf51",
 		"regtest": "707769464eb59fdd7b75cdbc5f0e72226345281852325c965b8ee1fd592fbf51"
 	},
-	// Genesis coinbase transaction IDs - to be populated from actual chain
+	// Genesis coinbase transaction IDs
 	genesisCoinbaseTransactionIdsByNetwork: {
-		"main":	null,
+		"main":	"a27b7d0a286e46fae3cb7e5b1eae6001fc1b15afee2f6a147291e7eb19746d5d",
 		"test":	null,
 		"regtest": null
 	},
-	// Genesis coinbase transactions - leave empty, will be fetched from node
-	genesisCoinbaseTransactionsByNetwork:{},
+	// Genesis coinbase transactions - hardcoded since RPC can't fetch genesis coinbase
+	genesisCoinbaseTransactionsByNetwork:{
+		"main": {
+			"txid": "a27b7d0a286e46fae3cb7e5b1eae6001fc1b15afee2f6a147291e7eb19746d5d",
+			"hash": "a27b7d0a286e46fae3cb7e5b1eae6001fc1b15afee2f6a147291e7eb19746d5d",
+			"version": 1,
+			"size": 218,
+			"vsize": 218,
+			"weight": 872,
+			"locktime": 0,
+			"vin": [
+				{
+					"coinbase": "04ffff001d01044c524c412054696d65732030382f4d61722f3230313420466f7220446f7269616e204e616b616d6f746f2c20626974636f696e2061727469636c65206272696e67732064656e69616c732c20696e747269677565",
+					"sequence": 4294967295
+				}
+			],
+			"vout": [
+				{
+					"value": 50.00000000,
+					"n": 0,
+					"scriptPubKey": {
+						"asm": "040184710fa689ad5023690c80f3a49c8f13f8d45b8c857fbcbc8bc4a8e4d3eb4b10f4d4604fa08dce601aaf0f470216fe1b51850b4acf21b179c45070ac7b03a9 OP_CHECKSIG",
+						"hex": "41040184710fa689ad5023690c80f3a49c8f13f8d45b8c857fbcbc8bc4a8e4d3eb4b10f4d4604fa08dce601aaf0f470216fe1b51850b4acf21b179c45070ac7b03a9ac",
+						"type": "pubkey"
+					}
+				}
+			],
+			"hex": "01000000010000000000000000000000000000000000000000000000000000000000000000ffffffff5b04ffff001d01044c524c412054696d65732030382f4d61722f3230313420466f7220446f7269616e204e616b616d6f746f2c20626974636f696e2061727469636c65206272696e67732064656e69616c732c20696e747269677565ffffffff0100f2052a010000004341040184710fa689ad5023690c80f3a49c8f13f8d45b8c857fbcbc8bc4a8e4d3eb4b10f4d4604fa08dce601aaf0f470216fe1b51850b4acf21b179c45070ac7b03a9ac00000000"
+		}
+	},
 	// Genesis block stats - leave empty, will be fetched from node
 	genesisBlockStatsByNetwork:{},
 	// No test data for Doriancoin
