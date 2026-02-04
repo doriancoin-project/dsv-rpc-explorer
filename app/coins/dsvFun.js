@@ -13,8 +13,8 @@ module.exports = {
 			blockHeight: 0,
 			blockHash: "d21da25e277bd20b7456087d69c5fee2ebc6091b410271b5cb0623c7d1e7d1b9",
 			summary: "Doriancoin Genesis Block",
-			alertBodyHtml: "This is the first block in the Doriancoin blockchain, known as the <b>Genesis Block</b>. The coinbase contains the message: <b>\"LA Times 08/Mar/2014 For Dorian Nakamoto, bitcoin article brings denials, intrigue\"</b> - a reference to the infamous Newsweek article that incorrectly identified Dorian Nakamoto as Bitcoin's creator.",
-			referenceUrl: "https://www.newsweek.com/2014/03/14/face-behind-bitcoin-247957.html"
+			alertBodyHtml: "This is the first block in the Doriancoin blockchain, known as the <b>Genesis Block</b>. The coinbase contains the message: <b>\"LA Times 08/Mar/2014 For Dorian Nakamoto, bitcoin article brings denials, intrigue\"</b> - a reference to the LA Times article covering the story of Dorian Nakamoto being incorrectly identified as Bitcoin's creator.",
+			referenceUrl: "https://www.latimes.com/business/la-fi-bitcoin-satoshi-20140308-story.html"
 		},
 		{
 			type: "tx",
