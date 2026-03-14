@@ -253,7 +253,7 @@ router.get("/blockchain/coins", asyncHandler(async (req, res, next) => {
 		res.send({
 			supply: estimatedSupply.toString(),
 			type: "estimated",
-			lastCheckpointHeight: lastCheckpoint.height
+			lastCheckpointHeight: lastCheckpoint ? lastCheckpoint.height : -1
 		})
 
 		next();
