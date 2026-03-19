@@ -1789,7 +1789,8 @@ function tryParseAddress(address) {
 	// Doriancoin: mainnet addresses start with 'D' (P2PKH prefix 0x1e = 30)
 	// Doriancoin: testnet also uses 'D' for P2PKH (prefix 0x1e = 30)
 	// Also accept 'A' for P2SH on mainnet (prefix 0x05 = 5)
-	let b58prefix = (global.activeBlockchain == "main" ? /^[DA].*$/ : /^[D].*$/);
+	// Also accept 'C' for P2SH (prefix 0x1c = 28)
+	let b58prefix = (global.activeBlockchain == "main" ? /^[DAC].*$/ : /^[D].*$/);
 	if (address.match(b58prefix)) {
 		try {
 			parsedAddress = bitcoinjs.address.fromBase58Check(address);
